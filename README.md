@@ -8,20 +8,13 @@ Data acquired from [NYC Open Data](https://opendata.cityofnewyork.us/).
 
 ### Getting Started
 
-### Docker
-
-Build and run the Docker image:
-
-```sh
-./scripts/docker.sh # Run docker container
-```
-
 ### Venv
 
-activate python virtual environment
+- every time you start a new terminal session, do this:
+  activate python virtual environment
 
 ```sh
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 deactivate python virtual environment
@@ -37,5 +30,4 @@ deactivate
 
 ## Tools
 
-- [uv - An extremely fast Python package and project manager, written in Rust.](https://docs.astral.sh/uv/)
-- docker
+- [uv](https://docs.astral.sh/uv/)
