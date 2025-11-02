@@ -30,4 +30,6 @@ deactivate
 
 ## Tools
 
-- [uv](https://docs.astral.sh/uv/)
+- [uv](https://docs.astral.sh/uv/) - package and project management
+- [Pandas](https://pandas.pydata.org/) - data analysis and manipulation
+- [GeoPandas](https://geopandas.org/) - working with geospatial data
