@@ -10,3 +10,8 @@ pytz==2025.2
 shapely==2.1.2
 six==1.17.0
 tzdata==2025.2
+matplotlib
+seaborn
+thefuzz
+sqlalchemy
+jupyter

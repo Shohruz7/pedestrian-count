@@ -54,3 +54,7 @@ env.bak/
 venv.bak/
 
 data
+data-raw/*
+data_clean/*
+output/*
+*.csv
