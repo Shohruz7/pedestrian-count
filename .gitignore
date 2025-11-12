@@ -53,6 +53,8 @@ ENV/
 env.bak/
 venv.bak/
 
+database.ini
+
 data
 data-raw/*
 data_clean/*
