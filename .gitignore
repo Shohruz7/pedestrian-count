@@ -58,3 +58,8 @@ data-raw/*
 data_clean/*
 output/*
 *.csv
+ARCHITECTURE_PLAN.md
+EDITs.md
+test_api.py
+setup_database.sh
+quick_start.sh
