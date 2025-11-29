@@ -34,6 +34,17 @@ class Config:
     # Cache configuration (optional)
     CACHE_TYPE = os.environ.get('CACHE_TYPE') or 'simple'
     CACHE_DEFAULT_TIMEOUT = 300
+    
+    # NYC Open Data API configuration
+    NYC_API_DEMAND_MAP_ENDPOINT = os.environ.get(
+        'NYC_API_DEMAND_MAP_ENDPOINT',
+        'https://data.cityofnewyork.us/resource/fwpa-qxaf.json'
+    )
+    NYC_API_COUNT_ENDPOINT = os.environ.get(
+        'NYC_API_COUNT_ENDPOINT',
+        'https://data.cityofnewyork.us/resource/cqsj-cfgu.json'
+    )
+    USE_NYC_API = os.environ.get('USE_NYC_API', 'false').lower() == 'true'
 
 
 class DevelopmentConfig(Config):

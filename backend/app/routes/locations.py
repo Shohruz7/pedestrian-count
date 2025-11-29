@@ -1,19 +1,27 @@
 """
 Location API routes
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy import and_, or_, func
-from app import db
+from app import db, limiter
 from app.models import Location, AggregatedCount
 from app.services.map_service import create_geojson_featurecollection
+from app.services.nyc_api_service import get_locations_geojson, fetch_and_transform_locations
 
 bp = Blueprint('locations', __name__)
 
 
 @bp.route('', methods=['GET'])
+@limiter.limit("30 per minute")
 def get_locations():
     """Get all locations with optional filters"""
     try:
+        # Check if we should use NYC API
+        use_nyc_api = request.args.get('source', '').lower() == 'nyc' or current_app.config.get('USE_NYC_API', False)
+        
+        if use_nyc_api:
+            return get_locations_from_nyc_api()
+        
         # Get query parameters
         boroughs = request.args.getlist('borough[]')
         categories = request.args.getlist('category[]')
@@ -92,7 +100,58 @@ def get_locations():
         return jsonify({'error': str(e)}), 500
 
 
+def get_locations_from_nyc_api():
+    """Get locations from NYC Open Data API"""
+    try:
+        # Get query parameters
+        boroughs = request.args.getlist('borough[]')
+        categories = request.args.getlist('category[]')
+        search = request.args.get('search', '').strip()
+        format_type = request.args.get('format', 'geojson')
+        limit = request.args.get('limit', type=int)
+        
+        # Build filters dict
+        filters = {}
+        if boroughs:
+            filters['boroughs'] = boroughs
+        if categories:
+            filters['categories'] = categories
+        if search:
+            filters['search'] = search
+        
+        # Fetch from NYC API
+        geojson_data = get_locations_geojson(limit=limit, filters=filters if filters else None)
+        
+        if format_type == 'geojson':
+            return jsonify(geojson_data), 200
+        else:
+            # Convert GeoJSON to JSON format
+            locations = []
+            for feature in geojson_data.get('features', []):
+                props = feature.get('properties', {})
+                locations.append({
+                    'id': props.get('objectid'),
+                    'objectid': props.get('objectid'),
+                    'loc_id': props.get('loc_id'),
+                    'borough': props.get('borough'),
+                    'street_name_clean': props.get('street_name_clean'),
+                    'street_clean': props.get('street_clean'),
+                    'category': props.get('category'),
+                    'segmentid': props.get('segmentid'),
+                })
+            
+            return jsonify({
+                'locations': locations,
+                'count': len(locations),
+                'source': 'nyc_open_data'
+            }), 200
+    
+    except Exception as e:
+        return jsonify({'error': f'Error fetching from NYC API: {str(e)}'}), 500
+
+
 @bp.route('/<int:location_id>', methods=['GET'])
+@limiter.limit("30 per minute")
 def get_location(location_id):
     """Get a single location by ID"""
     try:
@@ -117,6 +176,7 @@ def get_location(location_id):
 
 
 @bp.route('/bounds', methods=['GET'])
+@limiter.limit("30 per minute")
 def get_locations_in_bounds():
     """Get locations within map bounds (for performance optimization)"""
     try:
@@ -169,4 +229,11 @@ def get_locations_in_bounds():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/nyc', methods=['GET'])
+@limiter.limit("20 per minute")
+def get_locations_nyc():
+    """Get locations directly from NYC Open Data API"""
+    return get_locations_from_nyc_api()
 
