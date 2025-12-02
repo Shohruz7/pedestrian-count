@@ -15,6 +15,8 @@ import seaborn as sns
 import numpy as np
 from datetime import datetime
 import re
+import json
+from shapely.geometry import shape
 
 # Page configuration
 st.set_page_config(
@@ -37,9 +39,32 @@ def load_data():
     gdf = None
     if os.path.exists(geo_path):
         try:
-            gdf = gpd.read_file(geo_path)
+            # Try using pyogrio first (faster and more reliable)
+            try:
+                gdf = gpd.read_file(geo_path, engine='pyogrio')
+            except:
+                # Fallback: read GeoJSON as JSON and convert manually
+                try:
+                    with open(geo_path, 'r') as f:
+                        geojson_data = json.load(f)
+                    
+                    # Convert GeoJSON features to GeoDataFrame
+                    features = geojson_data.get('features', [])
+                    if features:
+                        geometries = [shape(feature['geometry']) for feature in features]
+                        properties = [feature.get('properties', {}) for feature in features]
+                        gdf = gpd.GeoDataFrame(properties, geometry=geometries, crs='EPSG:4326')
+                    else:
+                        # Try standard geopandas read as last resort
+                        gdf = gpd.read_file(geo_path)
+                except Exception as e2:
+                    # Last resort: standard geopandas
+                    gdf = gpd.read_file(geo_path)
+            
             gdf['avg_recent_count'] = pd.to_numeric(gdf['avg_recent_count'], errors='coerce')
             # Ensure CRS is WGS84 for folium
+            if gdf.crs is None or str(gdf.crs) != 'EPSG:4326':
+                gdf = gdf.set_crs('EPSG:4326', allow_override=True)
             if gdf.crs != 'EPSG:4326':
                 gdf = gdf.to_crs('EPSG:4326')
             # Use geometry column (it should be named 'geometry' after GeoPandas read)
