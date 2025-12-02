@@ -202,3 +202,4 @@ FROM locations_with_counts
 WHERE category IS NOT NULL
 GROUP BY category;
 
+

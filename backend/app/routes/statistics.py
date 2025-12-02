@@ -3,13 +3,14 @@ Statistics API routes
 """
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func, and_, or_
-from app import db
+from app import db, limiter
 from app.models import Location, AggregatedCount
 
 bp = Blueprint('statistics', __name__)
 
 
 @bp.route('/summary', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_summary():
     """Get overall summary statistics"""
     try:
@@ -76,6 +77,7 @@ def get_summary():
 
 
 @bp.route('/by-borough', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_by_borough():
     """Get statistics grouped by borough"""
     try:
@@ -122,6 +124,7 @@ def get_by_borough():
 
 
 @bp.route('/by-category', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_by_category():
     """Get statistics grouped by category"""
     try:
@@ -168,6 +171,7 @@ def get_by_category():
 
 
 @bp.route('/top-sites', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_top_sites():
     """Get top N sites by pedestrian count"""
     try:

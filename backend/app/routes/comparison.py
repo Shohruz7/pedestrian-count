@@ -3,13 +3,14 @@ Comparison API routes
 """
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func, and_, or_
-from app import db
+from app import db, limiter
 from app.models import Location, AggregatedCount
 
 bp = Blueprint('comparison', __name__)
 
 
 @bp.route('', methods=['POST'])
+@limiter.limit("30 per minute")
 def compare_groups():
     """Compare two groups (by borough or category)"""
     try:

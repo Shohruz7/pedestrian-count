@@ -7,3 +7,4 @@ from app.models.demand import DemandSegment
 
 __all__ = ['Location', 'PedestrianCount', 'AggregatedCount', 'DemandSegment']
 
+

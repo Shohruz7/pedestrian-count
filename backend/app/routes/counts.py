@@ -4,13 +4,14 @@ Time series count API routes
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from sqlalchemy import and_, func
-from app import db
+from app import db, limiter
 from app.models import Location, PedestrianCount
 
 bp = Blueprint('counts', __name__)
 
 
 @bp.route('/time-series/<int:location_id>', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_time_series(location_id):
     """Get time series data for a specific location"""
     try:
@@ -64,6 +65,7 @@ def get_time_series(location_id):
 
 
 @bp.route('/time-series/aggregate', methods=['GET'])
+@limiter.limit("30 per minute")
 def get_aggregate_time_series():
     """Get aggregated time series data across multiple locations"""
     try:

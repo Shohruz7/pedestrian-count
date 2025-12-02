@@ -77,3 +77,4 @@ class Location(db.Model):
     def __repr__(self):
         return f'<Location {self.objectid}: {self.street_name_clean}>'
 
+

@@ -73,3 +73,4 @@ class AggregatedCount(db.Model):
     def __repr__(self):
         return f'<AggregatedCount {self.location_id}: avg={self.avg_recent_count}>'
 
+

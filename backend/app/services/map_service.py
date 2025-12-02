@@ -17,3 +17,4 @@ def create_geojson_featurecollection(locations):
         'features': features
     }
 
+

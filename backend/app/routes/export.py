@@ -3,7 +3,7 @@ Export API routes
 """
 from flask import Blueprint, request, jsonify, Response
 from sqlalchemy import and_, or_, func
-from app import db
+from app import db, limiter
 from app.models import Location, AggregatedCount, PedestrianCount
 import csv
 import io
@@ -13,6 +13,7 @@ bp = Blueprint('export', __name__)
 
 
 @bp.route('/csv', methods=['GET'])
+@limiter.limit("20 per minute")
 def export_csv():
     """Export filtered data as CSV"""
     try:
@@ -96,6 +97,7 @@ def export_csv():
 
 
 @bp.route('/geojson', methods=['GET'])
+@limiter.limit("20 per minute")
 def export_geojson():
     """Export filtered data as GeoJSON"""
     try:
