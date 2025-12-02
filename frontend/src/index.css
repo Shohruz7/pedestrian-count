@@ -1,0 +1,81 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .leaflet-container {
+    min-height: 300px !important;
+  }
+  
+  /* Ensure tables are scrollable on mobile */
+  .MuiTableContainer-root {
+    overflow-x: auto;
+  }
+  
+  /* Make charts responsive */
+  .recharts-wrapper {
+    width: 100% !important;
+    max-width: 100%;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+  }
+  
+  /* Hide non-essential elements when printing */
+  .no-print,
+  button,
+  .MuiIconButton-root,
+  .MuiTabs-root,
+  .MuiPaper-root:has(button) {
+    display: none !important;
+  }
+  
+  /* Ensure full width for print */
+  .MuiBox-root,
+  .MuiPaper-root {
+    page-break-inside: avoid;
+    width: 100% !important;
+  }
+  
+  /* Map should be full width */
+  .leaflet-container {
+    height: 600px !important;
+    width: 100% !important;
+  }
+  
+  /* Tables should be full width */
+  table {
+    width: 100% !important;
+  }
+  
+  /* Charts should be full width */
+  .recharts-wrapper {
+    width: 100% !important;
+  }
+}
