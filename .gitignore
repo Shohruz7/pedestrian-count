@@ -70,6 +70,10 @@ quick_test.sh
 start_backend.sh
 start_frontend.sh
 test_connection.sh
+backend/test_api.py
+backend/setup_database.sh
+backend/quick_start.sh
+backend/quick_test.sh
 
 # Frontend
 frontend/node_modules/

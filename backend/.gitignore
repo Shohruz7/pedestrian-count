@@ -32,8 +32,6 @@ instance/
 .DS_Store
 Thumbs.db
 
-# Migrations (optional - uncomment if you don't want to track migrations)
-# migrations/
 
 # Testing
 .pytest_cache/
