@@ -59,7 +59,7 @@ data-raw/*
 data_clean/*
 output/*
 *.csv
-CONNECTION_GUIDE.md
+Connect.md
 start.md
 
 # Backend scripts
@@ -107,3 +107,5 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+frontend/package-lock.json.bak
