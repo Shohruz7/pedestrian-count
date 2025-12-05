@@ -12,7 +12,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'react-vendor': ['react', 'react-dom'],
           'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
           'map-vendor': ['leaflet', 'react-leaflet', 'leaflet.markercluster'],
           'chart-vendor': ['recharts'],
@@ -32,7 +32,7 @@ export default defineConfig({
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@mui/material', 'leaflet', 'react-leaflet']
+    include: ['react', 'react-dom', '@mui/material', 'leaflet', 'react-leaflet']
   }
 })
 
