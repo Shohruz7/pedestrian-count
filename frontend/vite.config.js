@@ -11,11 +11,23 @@ export default defineConfig({
     // Optimize bundle size
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-          'map-vendor': ['leaflet', 'react-leaflet', 'leaflet.markercluster'],
-          'chart-vendor': ['recharts'],
+        manualChunks(id) {
+          // Manual chunking for better code splitting
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor'
+            }
+            if (id.includes('@mui') || id.includes('@emotion')) {
+              return 'mui-vendor'
+            }
+            if (id.includes('leaflet')) {
+              return 'map-vendor'
+            }
+            if (id.includes('recharts')) {
+              return 'chart-vendor'
+            }
+            return 'vendor'
+          }
         }
       }
     },
@@ -32,7 +44,8 @@ export default defineConfig({
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', '@mui/material', 'leaflet', 'react-leaflet']
+    include: ['react', 'react-dom', '@mui/material', 'leaflet', 'react-leaflet'],
+    exclude: ['react-router-dom']
   }
 })
 
