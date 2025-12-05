@@ -8,7 +8,7 @@ import {
   CircularProgress,
 } from '@mui/material'
 import { Download as DownloadIcon } from '@mui/icons-material'
-import { exportCSV, exportGeoJSON } from '../../services/api'
+import { exportCSV, exportGeoJSON } from '../../services/csvDataService'
 
 function ExportPanel({ filters }) {
   const [loading, setLoading] = useState(false)
@@ -16,29 +16,30 @@ function ExportPanel({ filters }) {
   const handleExport = async (format) => {
     setLoading(true)
     try {
-      const params = {}
+      // Build filters object for CSV service
+      const filterParams = {}
       if (filters.boroughs?.length > 0) {
-        params['borough[]'] = filters.boroughs
+        filterParams.boroughs = filters.boroughs
       }
       if (filters.categories?.length > 0) {
-        params['category[]'] = filters.categories
+        filterParams.categories = filters.categories
       }
       if (filters.minCount !== null) {
-        params.min_count = filters.minCount
+        filterParams.minCount = filters.minCount
       }
       if (filters.maxCount !== null) {
-        params.max_count = filters.maxCount
+        filterParams.maxCount = filters.maxCount
       }
       if (filters.search) {
-        params.search = filters.search
+        filterParams.search = filters.search
       }
 
       let blob, filename
       if (format === 'csv') {
-        blob = await exportCSV(params)
+        blob = await exportCSV(filterParams)
         filename = 'pedestrian_data.csv'
       } else {
-        blob = await exportGeoJSON(params)
+        blob = await exportGeoJSON(filterParams)
         filename = 'pedestrian_data.geojson'
       }
 

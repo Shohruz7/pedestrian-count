@@ -17,7 +17,7 @@ import {
   Alert,
 } from '@mui/material'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { getSummaryStats, getBoroughStats, getCategoryStats } from '../../services/api'
+import { getSummaryStats, getBoroughStats, getCategoryStats } from '../../services/csvDataService'
 import { CardSkeleton, TableSkeleton, ChartSkeleton } from '../common/LoadingSkeleton'
 
 function StatisticsPanel({ filters }) {
@@ -33,22 +33,23 @@ function StatisticsPanel({ filters }) {
     const fetchStats = async () => {
       setLoading(true)
       try {
-        const params = {}
+        // Build filters object for CSV service
+        const filterParams = {}
         if (filters.boroughs?.length > 0) {
-          params['borough[]'] = filters.boroughs
+          filterParams.boroughs = filters.boroughs
         }
         if (filters.categories?.length > 0) {
-          params['category[]'] = filters.categories
+          filterParams.categories = filters.categories
         }
         if (filters.minCount !== null) {
-          params.min_count = filters.minCount
+          filterParams.minCount = filters.minCount
         }
         if (filters.maxCount !== null) {
-          params.max_count = filters.maxCount
+          filterParams.maxCount = filters.maxCount
         }
 
         const [summaryData, boroughData, categoryData] = await Promise.all([
-          getSummaryStats(params),
+          getSummaryStats(filterParams),
           getBoroughStats(),
           getCategoryStats(),
         ])

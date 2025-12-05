@@ -5,7 +5,7 @@ import L from 'leaflet'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-import { getLocations } from '../../services/api'
+import { getLocations } from '../../services/csvDataService'
 import { Box, Typography, Alert } from '@mui/material'
 import { MapSkeleton } from '../common/LoadingSkeleton'
 
@@ -116,28 +116,27 @@ function MapView({ filters }) {
       setError(null)
       
       try {
-        const params = {
-          format: 'geojson',
-        }
+        // Build filters object for CSV service
+        const filterParams = {}
         
         // Add filters
         if (filters.boroughs?.length > 0) {
-          params['borough[]'] = filters.boroughs
+          filterParams.boroughs = filters.boroughs
         }
         if (filters.categories?.length > 0) {
-          params['category[]'] = filters.categories
+          filterParams.categories = filters.categories
         }
         if (filters.minCount !== null && filters.minCount !== '') {
-          params.min_count = filters.minCount
+          filterParams.minCount = filters.minCount
         }
         if (filters.maxCount !== null && filters.maxCount !== '') {
-          params.max_count = filters.maxCount
+          filterParams.maxCount = filters.maxCount
         }
         if (filters.search) {
-          params.search = filters.search
+          filterParams.search = filters.search
         }
         
-        const data = await getLocations(params)
+        const data = await getLocations(filterParams)
         
         if (data.features) {
           setLocations(data.features)

@@ -12,22 +12,52 @@ import {
   TextField,
   Alert,
   Tooltip,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
 } from '@mui/material'
 import { Info } from '@mui/icons-material'
-import { getTopSites } from '../../services/api'
+import { getTopSites, getSiteCountByBorough } from '../../services/csvDataService'
 import { TableSkeleton } from '../common/LoadingSkeleton'
+
+const BOROUGHS = ['The Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island', 'Bridges']
 
 function TopSitesPanel({ filters }) {
   const [sites, setSites] = useState([])
   const [limit, setLimit] = useState(10)
+  const [selectedBorough, setSelectedBorough] = useState('')
+  const [maxSites, setMaxSites] = useState(100) // Default max, will be updated
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  // Fetch max sites count when borough changes
+  useEffect(() => {
+    const fetchMaxSites = async () => {
+      try {
+        const boroughFilter = selectedBorough === '' ? null : selectedBorough
+        const count = await getSiteCountByBorough(boroughFilter)
+        setMaxSites(count)
+        // If current limit exceeds max, adjust it
+        if (limit > count) {
+          setLimit(count)
+        }
+      } catch (error) {
+        console.error('Error fetching max sites count:', error)
+        // Keep default max on error
+      }
+    }
+
+    fetchMaxSites()
+  }, [selectedBorough])
 
   useEffect(() => {
     const fetchTopSites = async () => {
       setLoading(true)
       try {
-        const data = await getTopSites(limit)
+        // Pass empty string or null if no borough selected (shows all)
+        const boroughFilter = selectedBorough === '' ? null : selectedBorough
+        const data = await getTopSites(limit, boroughFilter)
         setSites(data.sites || [])
         setError(null)
       } catch (error) {
@@ -39,7 +69,7 @@ function TopSitesPanel({ filters }) {
     }
 
     fetchTopSites()
-  }, [limit])
+  }, [limit, selectedBorough])
 
   return (
     <Box sx={{ p: 2 }}>
@@ -53,15 +83,38 @@ function TopSitesPanel({ filters }) {
               <Info fontSize="small" color="action" />
             </Tooltip>
           </Box>
-          <TextField
-            label="Number of Sites"
-            type="number"
-            value={limit}
-            onChange={(e) => setLimit(Number(e.target.value))}
-            inputProps={{ min: 1, max: 100 }}
-            size="small"
-            sx={{ width: { xs: '100%', sm: 150 } }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 }, verticalAlign: 'middle' }}>
+              <InputLabel>Filter by Borough</InputLabel>
+              <Select
+                value={selectedBorough}
+                label="Filter by Borough"
+                onChange={(e) => setSelectedBorough(e.target.value)}
+              >
+                <MenuItem value="">All Boroughs</MenuItem>
+                {BOROUGHS.map((borough) => (
+                  <MenuItem key={borough} value={borough}>
+                    {borough}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Number of Sites"
+              type="number"
+              value={limit}
+              onChange={(e) => {
+                const newValue = Number(e.target.value)
+                // Ensure value doesn't exceed max
+                const clampedValue = Math.min(Math.max(1, newValue), maxSites)
+                setLimit(clampedValue)
+              }}
+              inputProps={{ min: 1, max: maxSites }}
+              size="small"
+              sx={{ width: { xs: '100%', sm: 150 }, '& .MuiFormHelperText-root': { position: 'absolute', bottom: -20 } }}
+              helperText={`Max: ${maxSites} sites`}
+            />
+          </Box>
         </Box>
 
         {error && (

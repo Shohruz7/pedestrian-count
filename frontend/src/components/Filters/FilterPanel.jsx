@@ -16,7 +16,7 @@ import {
   Tooltip,
 } from '@mui/material'
 import { Save, Share, GetApp } from '@mui/icons-material'
-import { getLocations } from '../../services/api'
+import { getLocations } from '../../services/csvDataService'
 
 const BOROUGHS = ['The Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island', 'Bridges']
 const CATEGORIES = ['Community', 'Global', 'Neighborhood', 'Regional']

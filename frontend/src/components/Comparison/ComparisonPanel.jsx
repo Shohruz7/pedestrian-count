@@ -20,9 +20,22 @@ import {
   IconButton,
   Tooltip,
   Alert,
+  Tabs,
+  Tab,
 } from '@mui/material'
 import { Close as CloseIcon, Info } from '@mui/icons-material'
-import { compareGroups } from '../../services/api'
+import { compareGroups } from '../../services/csvDataService'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts'
 
 const BOROUGHS = ['The Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island', 'Bridges']
 const CATEGORIES = ['Community', 'Global', 'Neighborhood', 'Regional']
@@ -34,6 +47,7 @@ function ComparisonPanel() {
   const [comparisonResult, setComparisonResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [viewTab, setViewTab] = useState(0) // 0 = Charts, 1 = Tables
 
   const options = comparisonType === 'borough' ? BOROUGHS : CATEGORIES
 
@@ -298,90 +312,256 @@ function ComparisonPanel() {
       </Paper>
 
       {comparisonResult && (
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Group 1
-                </Typography>
-                <Typography>Count: {comparisonResult.group1.statistics.count}</Typography>
-                <Typography>Mean: {Math.round(comparisonResult.group1.statistics.mean).toLocaleString()}</Typography>
-                <Typography>Median: {Math.round(comparisonResult.group1.statistics.median).toLocaleString()}</Typography>
-                <Typography>Max: {Math.round(comparisonResult.group1.statistics.max).toLocaleString()}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Group 2
-                </Typography>
-                <Typography>Count: {comparisonResult.group2.statistics.count}</Typography>
-                <Typography>Mean: {Math.round(comparisonResult.group2.statistics.mean).toLocaleString()}</Typography>
-                <Typography>Median: {Math.round(comparisonResult.group2.statistics.median).toLocaleString()}</Typography>
-                <Typography>Max: {Math.round(comparisonResult.group2.statistics.max).toLocaleString()}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Differences
-              </Typography>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Metric</TableCell>
-                      <TableCell align="right">Absolute</TableCell>
-                      <TableCell align="right">Percentage</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Count</TableCell>
-                      <TableCell align="right">
-                        {comparisonResult.differences.count.absolute}
-                      </TableCell>
-                      <TableCell align="right">
-                        {comparisonResult.differences.count.percentage}%
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Mean</TableCell>
-                      <TableCell align="right">
-                        {Math.round(comparisonResult.differences.mean.absolute).toLocaleString()}
-                      </TableCell>
-                      <TableCell align="right">
-                        {comparisonResult.differences.mean.percentage}%
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Median</TableCell>
-                      <TableCell align="right">
-                        {Math.round(comparisonResult.differences.median.absolute).toLocaleString()}
-                      </TableCell>
-                      <TableCell align="right">
-                        {comparisonResult.differences.median.percentage}%
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Max</TableCell>
-                      <TableCell align="right">
-                        {Math.round(comparisonResult.differences.max.absolute).toLocaleString()}
-                      </TableCell>
-                      <TableCell align="right">
-                        {comparisonResult.differences.max.percentage}%
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </Grid>
-        </Grid>
+        <Box>
+          <Paper sx={{ mb: 2 }}>
+            <Tabs value={viewTab} onChange={(e, newValue) => setViewTab(newValue)}>
+              <Tab label="Charts" />
+              <Tab label="Tables" />
+            </Tabs>
+          </Paper>
+
+          {viewTab === 0 && (() => {
+            const group1Label = comparisonResult.group1.values.join(', ')
+            const group2Label = comparisonResult.group2.values.join(', ')
+            
+            return (
+              <Grid container spacing={2}>
+                {/* Statistics Comparison Chart */}
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Statistics Comparison
+                    </Typography>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart
+                        data={[
+                          {
+                            metric: 'Count',
+                            [group1Label]: comparisonResult.group1.statistics.count,
+                            [group2Label]: comparisonResult.group2.statistics.count,
+                          },
+                          {
+                            metric: 'Mean',
+                            [group1Label]: Math.round(comparisonResult.group1.statistics.mean),
+                            [group2Label]: Math.round(comparisonResult.group2.statistics.mean),
+                          },
+                          {
+                            metric: 'Median',
+                            [group1Label]: Math.round(comparisonResult.group1.statistics.median),
+                            [group2Label]: Math.round(comparisonResult.group2.statistics.median),
+                          },
+                          {
+                            metric: 'Max',
+                            [group1Label]: Math.round(comparisonResult.group1.statistics.max),
+                            [group2Label]: Math.round(comparisonResult.group2.statistics.max),
+                          },
+                        ]}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="metric" />
+                        <YAxis />
+                        <RechartsTooltip
+                          formatter={(value) => value.toLocaleString()}
+                        />
+                        <Legend />
+                        <Bar dataKey={group1Label} fill="#1976d2" />
+                        <Bar dataKey={group2Label} fill="#dc004e" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Paper>
+                </Grid>
+
+              {/* Differences Chart */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Percentage Differences
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={[
+                        {
+                          metric: 'Count',
+                          percentage: comparisonResult.differences.count.percentage,
+                        },
+                        {
+                          metric: 'Mean',
+                          percentage: comparisonResult.differences.mean.percentage,
+                        },
+                        {
+                          metric: 'Median',
+                          percentage: comparisonResult.differences.median.percentage,
+                        },
+                        {
+                          metric: 'Max',
+                          percentage: comparisonResult.differences.max.percentage,
+                        },
+                      ]}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="metric" />
+                      <YAxis />
+                      <RechartsTooltip
+                        formatter={(value) => `${value.toFixed(2)}%`}
+                      />
+                      <Bar dataKey="percentage">
+                        {[
+                          comparisonResult.differences.count.percentage,
+                          comparisonResult.differences.mean.percentage,
+                          comparisonResult.differences.median.percentage,
+                          comparisonResult.differences.max.percentage,
+                        ].map((value, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={value >= 0 ? '#4caf50' : '#f44336'}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Paper>
+              </Grid>
+
+                {/* Group Labels */}
+                <Grid item xs={12} md={6}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {group1Label}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Count: {comparisonResult.group1.statistics.count}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Mean: {Math.round(comparisonResult.group1.statistics.mean).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Median: {Math.round(comparisonResult.group1.statistics.median).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Max: {Math.round(comparisonResult.group1.statistics.max).toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {group2Label}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Count: {comparisonResult.group2.statistics.count}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Mean: {Math.round(comparisonResult.group2.statistics.mean).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Median: {Math.round(comparisonResult.group2.statistics.median).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Max: {Math.round(comparisonResult.group2.statistics.max).toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )
+          })()}
+
+          {viewTab === 1 && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Group 1: {comparisonResult.group1.values.join(', ')}
+                    </Typography>
+                    <Typography>Count: {comparisonResult.group1.statistics.count}</Typography>
+                    <Typography>Mean: {Math.round(comparisonResult.group1.statistics.mean).toLocaleString()}</Typography>
+                    <Typography>Median: {Math.round(comparisonResult.group1.statistics.median).toLocaleString()}</Typography>
+                    <Typography>Max: {Math.round(comparisonResult.group1.statistics.max).toLocaleString()}</Typography>
+                    <Typography>Min: {Math.round(comparisonResult.group1.statistics.min).toLocaleString()}</Typography>
+                    <Typography>Std Dev: {Math.round(comparisonResult.group1.statistics.std_dev).toLocaleString()}</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Group 2: {comparisonResult.group2.values.join(', ')}
+                    </Typography>
+                    <Typography>Count: {comparisonResult.group2.statistics.count}</Typography>
+                    <Typography>Mean: {Math.round(comparisonResult.group2.statistics.mean).toLocaleString()}</Typography>
+                    <Typography>Median: {Math.round(comparisonResult.group2.statistics.median).toLocaleString()}</Typography>
+                    <Typography>Max: {Math.round(comparisonResult.group2.statistics.max).toLocaleString()}</Typography>
+                    <Typography>Min: {Math.round(comparisonResult.group2.statistics.min).toLocaleString()}</Typography>
+                    <Typography>Std Dev: {Math.round(comparisonResult.group2.statistics.std_dev).toLocaleString()}</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Differences
+                  </Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Metric</TableCell>
+                          <TableCell align="right">Absolute</TableCell>
+                          <TableCell align="right">Percentage</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>Count</TableCell>
+                          <TableCell align="right">
+                            {comparisonResult.differences.count.absolute}
+                          </TableCell>
+                          <TableCell align="right">
+                            {comparisonResult.differences.count.percentage}%
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Mean</TableCell>
+                          <TableCell align="right">
+                            {Math.round(comparisonResult.differences.mean.absolute).toLocaleString()}
+                          </TableCell>
+                          <TableCell align="right">
+                            {comparisonResult.differences.mean.percentage}%
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Median</TableCell>
+                          <TableCell align="right">
+                            {Math.round(comparisonResult.differences.median.absolute).toLocaleString()}
+                          </TableCell>
+                          <TableCell align="right">
+                            {comparisonResult.differences.median.percentage}%
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Max</TableCell>
+                          <TableCell align="right">
+                            {Math.round(comparisonResult.differences.max.absolute).toLocaleString()}
+                          </TableCell>
+                          <TableCell align="right">
+                            {comparisonResult.differences.max.percentage}%
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Paper>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
       )}
     </Box>
   )

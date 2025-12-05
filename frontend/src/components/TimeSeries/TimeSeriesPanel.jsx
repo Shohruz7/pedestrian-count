@@ -10,7 +10,7 @@ import {
   Skeleton,
 } from '@mui/material'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { getTimeSeries, getLocations } from '../../services/api'
+import { getTimeSeries, getLocations } from '../../services/csvDataService'
 import { ChartSkeleton } from '../common/LoadingSkeleton'
 
 function TimeSeriesPanel() {
@@ -25,8 +25,16 @@ function TimeSeriesPanel() {
     const fetchLocations = async () => {
       setLoadingLocations(true)
       try {
-        const data = await getLocations()
-        const locs = data.locations || []
+        const data = await getLocations({})
+        // csvDataService returns GeoJSON FeatureCollection
+        const locs = (data.features || []).map(f => ({
+          id: f.properties?.objectid || f.properties?.OBJECTID || f.properties?.id,
+          objectid: f.properties?.objectid || f.properties?.OBJECTID,
+          loc_id: f.properties?.loc_id || f.properties?.Loc,
+          borough: f.properties?.borough || f.properties?.Borough,
+          street_name_clean: f.properties?.street_name_clean || f.properties?.Street_Nam_clean,
+          category: f.properties?.category || f.properties?.Category,
+        }))
         setLocations(locs)
         if (locs.length > 0) {
           setSelectedLocationId(locs[0].id)

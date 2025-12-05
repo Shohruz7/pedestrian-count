@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { useTheme, Box, Alert, Typography } from '@mui/material'
 import L from 'leaflet'
-import { getLocations } from '../../services/api'
+import { getLocations } from '../../services/csvDataService'
 import { MapSkeleton } from '../common/LoadingSkeleton'
 
 function MapResizeHandler() {
@@ -111,24 +111,25 @@ function HeatmapView({ filters }) {
     const fetchLocations = async () => {
       setLoading(true)
       try {
-        const params = { format: 'geojson' }
+        // Build filters object for CSV service
+        const filterParams = {}
         if (filters.boroughs?.length > 0) {
-          params['borough[]'] = filters.boroughs
+          filterParams.boroughs = filters.boroughs
         }
         if (filters.categories?.length > 0) {
-          params['category[]'] = filters.categories
+          filterParams.categories = filters.categories
         }
         if (filters.minCount !== null && filters.minCount !== undefined) {
-          params.min_count = filters.minCount
+          filterParams.minCount = filters.minCount
         }
         if (filters.maxCount !== null && filters.maxCount !== undefined) {
-          params.max_count = filters.maxCount
+          filterParams.maxCount = filters.maxCount
         }
         if (filters.search) {
-          params.search = filters.search
+          filterParams.search = filters.search
         }
 
-        const data = await getLocations(params)
+        const data = await getLocations(filterParams)
         console.log('Heatmap data received:', data)
         
         if (data && data.features && Array.isArray(data.features)) {

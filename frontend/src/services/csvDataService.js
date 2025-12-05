@@ -336,11 +336,55 @@ export const getCategoryStats = async () => {
 }
 
 // Get top sites
-export const getTopSites = async (limit = 10) => {
+export const getTopSites = async (limit = 10, borough = null) => {
   const csvData = await loadCSVData()
   
-  const sorted = [...csvData]
+  let filtered = [...csvData]
     .filter(row => row.avg_recent_count !== null && !isNaN(row.avg_recent_count))
+  
+  // Filter by borough if specified
+  if (borough && borough !== '') {
+    // Normalize borough name to handle variations
+    const uniqueBoroughs = [...new Set(csvData.map(row => row.Borough).filter(Boolean))]
+    const normalizedBoroughs = []
+    
+    // Check for exact match
+    if (uniqueBoroughs.includes(borough)) {
+      normalizedBoroughs.push(borough)
+    } else {
+      // Try case-insensitive match
+      const caseInsensitiveMatch = uniqueBoroughs.find(b => 
+        b && b.toLowerCase() === borough.toLowerCase()
+      )
+      if (caseInsensitiveMatch) {
+        normalizedBoroughs.push(caseInsensitiveMatch)
+      } else {
+        // Try partial match (e.g., "The Bronx" vs "Bronx")
+        const partialMatch = uniqueBoroughs.find(b => 
+          b && (b.includes(borough) || borough.includes(b))
+        )
+        if (partialMatch) {
+          normalizedBoroughs.push(partialMatch)
+        } else {
+          // Special mappings
+          const boroughMap = {
+            'The Bronx': ['Bronx', 'The Bronx'],
+            'Bronx': ['Bronx', 'The Bronx'],
+            'Bridges': ['Bridges', 'East River Bridges', 'Harlem River Bridges']
+          }
+          if (boroughMap[borough]) {
+            normalizedBoroughs.push(...boroughMap[borough].filter(b => uniqueBoroughs.includes(b)))
+          } else {
+            normalizedBoroughs.push(borough) // Use as-is
+          }
+        }
+      }
+    }
+    
+    filtered = filtered.filter(row => normalizedBoroughs.includes(row.Borough))
+  }
+  
+  const sorted = filtered
     .sort((a, b) => (b.avg_recent_count || 0) - (a.avg_recent_count || 0))
     .slice(0, limit)
     .map(row => ({
@@ -358,6 +402,58 @@ export const getTopSites = async (limit = 10) => {
     }))
 
   return { sites: sorted, count: sorted.length }
+}
+
+// Get count of sites by borough (for max limit calculation)
+export const getSiteCountByBorough = async (borough = null) => {
+  const csvData = await loadCSVData()
+  
+  let filtered = [...csvData]
+    .filter(row => row.avg_recent_count !== null && !isNaN(row.avg_recent_count))
+  
+  // Filter by borough if specified
+  if (borough && borough !== '') {
+    // Normalize borough name to handle variations
+    const uniqueBoroughs = [...new Set(csvData.map(row => row.Borough).filter(Boolean))]
+    const normalizedBoroughs = []
+    
+    // Check for exact match
+    if (uniqueBoroughs.includes(borough)) {
+      normalizedBoroughs.push(borough)
+    } else {
+      // Try case-insensitive match
+      const caseInsensitiveMatch = uniqueBoroughs.find(b => 
+        b && b.toLowerCase() === borough.toLowerCase()
+      )
+      if (caseInsensitiveMatch) {
+        normalizedBoroughs.push(caseInsensitiveMatch)
+      } else {
+        // Try partial match (e.g., "The Bronx" vs "Bronx")
+        const partialMatch = uniqueBoroughs.find(b => 
+          b && (b.includes(borough) || borough.includes(b))
+        )
+        if (partialMatch) {
+          normalizedBoroughs.push(partialMatch)
+        } else {
+          // Special mappings
+          const boroughMap = {
+            'The Bronx': ['Bronx', 'The Bronx'],
+            'Bronx': ['Bronx', 'The Bronx'],
+            'Bridges': ['Bridges', 'East River Bridges', 'Harlem River Bridges']
+          }
+          if (boroughMap[borough]) {
+            normalizedBoroughs.push(...boroughMap[borough].filter(b => uniqueBoroughs.includes(b)))
+          } else {
+            normalizedBoroughs.push(borough) // Use as-is
+          }
+        }
+      }
+    }
+    
+    filtered = filtered.filter(row => normalizedBoroughs.includes(row.Borough))
+  }
+  
+  return filtered.length
 }
 
 // Compare groups

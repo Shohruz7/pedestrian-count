@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.local
+.venv
+__pycache__
+*.pyc
+*.log
+.DS_Store
+backend/
+data-raw/
+data_clean/
+notebooks/
+output/
+*.md
+!README.md
+
+
